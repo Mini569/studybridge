@@ -1,0 +1,11 @@
+.git
+.github
+.next
+coverage
+node_modules
+test-results
+tests
+docs
+supabase/.branches
+supabase/.temp
+*.tsbuildinfo
