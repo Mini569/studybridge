@@ -4,16 +4,16 @@ import { LinkButton } from "@/components/common/Button";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { SubjectBadge } from "@/components/common/SubjectBadge";
 import { HELP_TYPE_LABELS } from "@/lib/constants/options";
-import { getSubjectById } from "@/lib/demo/data";
 import { formatDayList, formatRelativeDate, formatTimeRange } from "@/lib/utils";
-import type { LearningRequest } from "@/types/domain";
+import type { LearningRequest, Subject } from "@/types/domain";
 
 interface RequestCardProps {
   request: LearningRequest;
+  subjects: Subject[];
 }
 
-export function RequestCard({ request }: RequestCardProps) {
-  const subject = getSubjectById(request.subjectId);
+export function RequestCard({ request, subjects }: RequestCardProps) {
+  const subject = subjects.find((item) => item.id === request.subjectId);
 
   return (
     <article className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">

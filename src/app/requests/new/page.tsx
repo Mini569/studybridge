@@ -2,12 +2,14 @@ import { LinkButton } from "@/components/common/Button";
 import { PageHeader } from "@/components/common/PageHeader";
 import { LearningRequestForm } from "@/components/forms/LearningRequestForm";
 import { AppShell } from "@/components/layout/AppShell";
+import { loadSubjects } from "@/lib/data/studybridge";
 
 export const metadata = {
   title: "도움 요청 작성",
 };
 
-export default function NewRequestPage() {
+export default async function NewRequestPage() {
+  const subjects = await loadSubjects();
   return (
     <AppShell>
       <PageHeader
@@ -16,7 +18,7 @@ export default function NewRequestPage() {
         title="도움 요청 작성"
       />
       <section className="mt-6 rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
-        <LearningRequestForm />
+        <LearningRequestForm subjects={subjects} />
       </section>
     </AppShell>
   );

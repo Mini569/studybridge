@@ -9,10 +9,11 @@ import { useForm } from "react-hook-form";
 import { createLearningRequest } from "@/app/actions/requests";
 import { Button } from "@/components/common/Button";
 import { FormField, inputStyles, textareaStyles } from "@/components/forms/FormField";
-import { BASE_SUBJECTS, DAY_OPTIONS, HELP_TYPE_OPTIONS } from "@/lib/constants/options";
+import { DAY_OPTIONS, HELP_TYPE_OPTIONS } from "@/lib/constants/options";
 import { learningRequestSchema, type LearningRequestFormValues, type LearningRequestInput } from "@/lib/validation/schemas";
+import type { Subject } from "@/types/domain";
 
-export function LearningRequestForm() {
+export function LearningRequestForm({ subjects }: { subjects: Subject[] }) {
   const router = useRouter();
   const [serverMessage, setServerMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -58,7 +59,7 @@ export function LearningRequestForm() {
         <FormField error={errors.subjectId?.message} htmlFor="subjectId" label="과목">
           <select className={inputStyles} id="subjectId" {...register("subjectId")}>
             <option value="">과목 선택</option>
-            {BASE_SUBJECTS.filter((subject) => subject.isActive).map((subject) => (
+            {subjects.filter((subject) => subject.isActive).map((subject) => (
               <option key={subject.id} value={subject.id}>
                 {subject.name}
               </option>

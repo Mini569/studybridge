@@ -6,8 +6,8 @@ import { LinkButton } from "@/components/common/Button";
 import { PageHeader } from "@/components/common/PageHeader";
 import { SubjectBadge } from "@/components/common/SubjectBadge";
 import { AppShell } from "@/components/layout/AppShell";
-import { BASE_SUBJECTS, DAY_LABELS } from "@/lib/constants/options";
-import { demoCurrentUser, demoFeedback, demoRequests, getMentorById } from "@/lib/demo/data";
+import { DAY_LABELS } from "@/lib/constants/options";
+import { loadCurrentProfile, loadMentors, loadRequests, loadSubjects, loadVisibleFeedback } from "@/lib/data/studybridge";
 import { hasCapacity } from "@/lib/matching/calculate-mentor-score";
 
 type MentorDetailProps = {
@@ -16,7 +16,7 @@ type MentorDetailProps = {
 
 export async function generateMetadata({ params }: MentorDetailProps) {
   const { mentorId } = await params;
-  const mentor = getMentorById(mentorId);
+  const mentor = (await loadMentors()).find((item) => item.profile.id === mentorId);
 
   return {
     title: mentor ? `${mentor.profile.displayName} 멘토` : "멘토 상세",
@@ -26,19 +26,22 @@ export async function generateMetadata({ params }: MentorDetailProps) {
 
 export default async function MentorDetailPage({ params }: MentorDetailProps) {
   const { mentorId } = await params;
-  const mentor = getMentorById(mentorId);
+  const [mentors, currentUser, requests, subjects, feedback] = await Promise.all([
+    loadMentors(), loadCurrentProfile(), loadRequests(), loadSubjects(), loadVisibleFeedback(mentorId),
+  ]);
+  const mentor = mentors.find((item) => item.profile.id === mentorId);
 
   if (!mentor) {
     notFound();
   }
 
   const matchingRequest =
-    demoRequests.find(
+    requests.find(
       (request) =>
-        request.menteeId === demoCurrentUser.id &&
+        request.menteeId === currentUser.id &&
         request.status === "open" &&
         mentor.subjects.some((subject) => subject.subjectId === request.subjectId),
-    ) ?? demoRequests.find((request) => request.menteeId === demoCurrentUser.id && request.status === "open");
+    ) ?? requests.find((request) => request.menteeId === currentUser.id && request.status === "open");
   const remainingCapacity = mentor.settings.maxActiveMentees - mentor.activeMentees;
 
   return (
@@ -83,7 +86,7 @@ export default async function MentorDetailPage({ params }: MentorDetailProps) {
             <h2 className="text-lg font-bold text-zinc-950">가능 과목과 세부 단원</h2>
             <div className="mt-4 space-y-4">
               {mentor.subjects.map((subject) => {
-                const subjectName = BASE_SUBJECTS.find((item) => item.id === subject.subjectId)?.name ?? "과목";
+                const subjectName = subjects.find((item) => item.id === subject.subjectId)?.name ?? "과목";
 
                 return (
                   <article className="rounded-lg border border-zinc-200 bg-zinc-50 p-4" key={subject.id}>
@@ -114,12 +117,12 @@ export default async function MentorDetailPage({ params }: MentorDetailProps) {
 
           <section className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
             <h2 className="text-lg font-bold text-zinc-950">최근 후기</h2>
-            {demoFeedback.length > 0 ? (
+            {feedback.length > 0 ? (
               <div className="mt-4 space-y-3">
-                {demoFeedback.slice(0, 2).map((feedback) => (
-                  <article className="rounded-lg bg-zinc-50 p-4" key={feedback.id}>
-                    <p className="text-sm font-semibold text-zinc-950">평점 {feedback.rating}/5</p>
-                    <p className="mt-2 text-sm leading-6 text-zinc-700">{feedback.comment}</p>
+                {feedback.slice(0, 2).map((item) => (
+                  <article className="rounded-lg bg-zinc-50 p-4" key={item.id}>
+                    <p className="text-sm font-semibold text-zinc-950">평점 {item.rating}/5</p>
+                    <p className="mt-2 text-sm leading-6 text-zinc-700">{item.comment ?? "작성된 한줄 후기가 없습니다."}</p>
                   </article>
                 ))}
               </div>
@@ -131,7 +134,7 @@ export default async function MentorDetailPage({ params }: MentorDetailProps) {
 
         <aside className="space-y-4">
           {matchingRequest ? (
-            <ApplicationPanel currentUserId={demoCurrentUser.id} learningRequestId={matchingRequest.id} mentor={mentor} />
+            <ApplicationPanel currentUserId={currentUser.id} learningRequestId={matchingRequest.id} mentor={mentor} />
           ) : (
             <div className="rounded-lg border border-zinc-200 bg-white p-5 text-sm leading-6 text-zinc-700">
               신청하려면 먼저 학습 도움 요청을 작성해 주세요.

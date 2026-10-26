@@ -67,13 +67,14 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="grid gap-3 rounded-lg border border-zinc-200 bg-zinc-50 p-4">
-            <div className="rounded-lg bg-white p-4 shadow-sm">
-              <div className="flex items-center justify-between">
-                <h2 className="font-bold text-zinc-950">추천 멘토</h2>
-                <span className="rounded-full bg-emerald-100 px-2 py-1 text-xs font-bold text-emerald-800">92점</span>
-              </div>
-              <p className="mt-3 text-sm leading-6 text-zinc-600">수학 · 미적분 · 화요일 저녁 가능</p>
+            <div className="min-w-0 grid gap-3 rounded-lg border border-zinc-200 bg-zinc-50 p-4">
+              <div className="rounded-lg bg-white p-4 shadow-sm">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h2 className="font-bold text-zinc-950">추천 멘토</h2>
+                  <span className="rounded-full bg-emerald-100 px-2 py-1 text-xs font-bold text-emerald-800">92점</span>
+                </div>
+                <p className="mt-2 text-sm font-medium text-zinc-800">닉네임 · 박지호</p>
+                <p className="mt-3 text-sm leading-6 text-zinc-600">수학 · 미적분 · 화요일 저녁 가능</p>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-lg bg-white p-4 shadow-sm">

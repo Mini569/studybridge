@@ -4,23 +4,24 @@ import { AdminActionButton } from "@/components/admin/AdminActionButton";
 import { PageHeader } from "@/components/common/PageHeader";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { AppShell } from "@/components/layout/AppShell";
-import { demoFeedback, demoMentors, demoMentorships, demoProfiles, demoReports, demoRequests } from "@/lib/demo/data";
+import { loadAdminPageData } from "@/lib/data/studybridge";
 import { buildFeedbackInsights } from "@/lib/feedback/insights";
 
 export const metadata = {
   title: "관리자",
 };
 
-export default function AdminPage() {
-  const activeMentors = demoMentors.filter((mentor) => mentor.profile.mentorEnabled).length;
-  const activeMentorships = demoMentorships.filter((mentorship) => mentorship.status === "active").length;
-  const completedMentorships = demoMentorships.filter((mentorship) => mentorship.status === "completed").length;
-  const reportedCount = demoReports.filter((report) => report.status === "pending").length;
-  const feedbackInsights = buildFeedbackInsights(demoFeedback);
+export default async function AdminPage() {
+  const { profiles, mentors, requests, mentorships, feedback, reports } = await loadAdminPageData();
+  const activeMentors = mentors.filter((mentor) => mentor.profile.mentorEnabled).length;
+  const activeMentorships = mentorships.filter((mentorship) => mentorship.status === "active").length;
+  const completedMentorships = mentorships.filter((mentorship) => mentorship.status === "completed").length;
+  const reportedCount = reports.filter((report) => report.status === "pending").length;
+  const feedbackInsights = buildFeedbackInsights(feedback);
   const stats = [
-    { label: "전체 사용자", value: demoProfiles.length, icon: UsersRound },
+    { label: "전체 사용자", value: profiles.length, icon: UsersRound },
     { label: "활성 멘토", value: activeMentors, icon: ShieldCheck },
-    { label: "등록 요청", value: demoRequests.length, icon: ClipboardList },
+    { label: "등록 요청", value: requests.length, icon: ClipboardList },
     { label: "진행 중 멘토링", value: activeMentorships, icon: UsersRound },
     { label: "완료 멘토링", value: completedMentorships, icon: ShieldCheck },
     { label: "신고 콘텐츠", value: reportedCount, icon: AlertTriangle },
@@ -105,7 +106,7 @@ export default function AdminPage() {
         <section className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
           <h2 className="text-lg font-bold text-zinc-950">사용자 목록</h2>
           <div className="mt-4 space-y-3">
-            {demoProfiles.slice(0, 6).map((profile) => (
+            {profiles.slice(0, 6).map((profile) => (
               <article className="flex flex-col gap-3 rounded-lg border border-zinc-200 bg-zinc-50 p-4 sm:flex-row sm:items-center sm:justify-between" key={profile.id}>
                 <div>
                   <h3 className="font-semibold text-zinc-950">{profile.displayName}</h3>
@@ -122,7 +123,7 @@ export default function AdminPage() {
         <section className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
           <h2 className="text-lg font-bold text-zinc-950">도움 요청 관리</h2>
           <div className="mt-4 space-y-3">
-            {demoRequests.slice(0, 4).map((request) => (
+            {requests.slice(0, 4).map((request) => (
               <article className="rounded-lg border border-zinc-200 bg-zinc-50 p-4" key={request.id}>
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h3 className="font-semibold text-zinc-950">{request.title}</h3>
@@ -142,7 +143,7 @@ export default function AdminPage() {
         <section className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm xl:col-span-2">
           <h2 className="text-lg font-bold text-zinc-950">신고 처리</h2>
           <div className="mt-4 space-y-3">
-            {demoReports.map((report) => (
+            {reports.map((report) => (
               <article className="rounded-lg border border-zinc-200 bg-zinc-50 p-4" key={report.id}>
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h3 className="font-semibold text-zinc-950">{report.reason}</h3>

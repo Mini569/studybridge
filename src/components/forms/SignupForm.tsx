@@ -47,7 +47,7 @@ export function SignupForm() {
 
   return (
     <form className="space-y-5" onSubmit={handleSubmit(submit)}>
-      <FormField error={errors.displayName?.message} htmlFor="displayName" label="표시 이름">
+      <FormField error={errors.displayName?.message} hint="멘토 목록에는 이메일 대신 이 닉네임이 표시됩니다." htmlFor="displayName" label="닉네임">
         <input className={inputStyles} id="displayName" {...register("displayName")} aria-invalid={Boolean(errors.displayName)} />
       </FormField>
 

@@ -6,7 +6,7 @@ import { EmptyState } from "@/components/common/EmptyState";
 import { PageHeader } from "@/components/common/PageHeader";
 import { ApplicationCard } from "@/components/applications/ApplicationCard";
 import { AppShell } from "@/components/layout/AppShell";
-import { demoApplications, demoCurrentUser } from "@/lib/demo/data";
+import { loadApplications, loadCurrentProfile } from "@/lib/data/studybridge";
 import { cn } from "@/lib/utils";
 
 export const metadata = {
@@ -19,11 +19,12 @@ type ApplicationSearchParams = {
 
 export default async function ApplicationsPage({ searchParams }: { searchParams: Promise<ApplicationSearchParams> }) {
   const params = await searchParams;
+  const [allApplications, currentUser] = await Promise.all([loadApplications(), loadCurrentProfile()]);
   const activeTab = params.tab === "received" ? "received" : "sent";
   const applications =
     activeTab === "received"
-      ? demoApplications.filter((application) => application.mentorId === demoCurrentUser.id)
-      : demoApplications.filter((application) => application.menteeId === demoCurrentUser.id);
+      ? allApplications.filter(({ application }) => application.mentorId === currentUser.id)
+      : allApplications.filter(({ application }) => application.menteeId === currentUser.id);
 
   return (
     <AppShell>
@@ -49,8 +50,8 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
 
       {applications.length > 0 ? (
         <section className="mt-6 grid gap-4 lg:grid-cols-2">
-          {applications.map((application) => (
-            <ApplicationCard application={application} direction={activeTab} key={application.id} />
+          {applications.map((item) => (
+            <ApplicationCard {...item} direction={activeTab} key={item.application.id} />
           ))}
         </section>
       ) : (

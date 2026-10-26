@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { AppShell } from "@/components/layout/AppShell";
 import { MentorshipCard } from "@/components/mentorships/MentorshipCard";
 import { MENTORSHIP_STATUS_LABELS } from "@/lib/constants/options";
-import { demoCurrentUser, demoMentorships } from "@/lib/demo/data";
+import { loadMentorships } from "@/lib/data/studybridge";
 import { cn } from "@/lib/utils";
 import type { MentorshipStatus } from "@/types/domain";
 
@@ -20,12 +20,9 @@ type MentorshipSearchParams = {
 
 export default async function MentorshipsPage({ searchParams }: { searchParams: Promise<MentorshipSearchParams> }) {
   const params = await searchParams;
+  const allMentorships = await loadMentorships();
   const status = params.status ?? "all";
-  const mentorships = demoMentorships.filter((mentorship) => {
-    const isMember = mentorship.mentorId === demoCurrentUser.id || mentorship.menteeId === demoCurrentUser.id;
-    const matchesStatus = status === "all" ? true : mentorship.status === status;
-    return isMember && matchesStatus;
-  });
+  const mentorships = allMentorships.filter(({ mentorship }) => status === "all" || mentorship.status === status);
 
   return (
     <AppShell>
@@ -48,8 +45,8 @@ export default async function MentorshipsPage({ searchParams }: { searchParams: 
 
       {mentorships.length > 0 ? (
         <section className="mt-6 grid gap-4 lg:grid-cols-2">
-          {mentorships.map((mentorship) => (
-            <MentorshipCard key={mentorship.id} mentorship={mentorship} />
+          {mentorships.map((item) => (
+            <MentorshipCard {...item} key={item.mentorship.id} />
           ))}
         </section>
       ) : (

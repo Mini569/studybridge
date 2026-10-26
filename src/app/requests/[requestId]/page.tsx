@@ -8,7 +8,8 @@ import { SubjectBadge } from "@/components/common/SubjectBadge";
 import { AppShell } from "@/components/layout/AppShell";
 import { CancelRequestButton } from "@/components/requests/CancelRequestButton";
 import { HELP_TYPE_LABELS } from "@/lib/constants/options";
-import { demoCurrentUser, getRecommendedMentorsForRequest, getRequestById, getSubjectById } from "@/lib/demo/data";
+import { loadCurrentProfile, loadMentors, loadRequestById, loadSubjects } from "@/lib/data/studybridge";
+import { rankRecommendedMentors } from "@/lib/matching/calculate-mentor-score";
 import { formatDayList, formatTimeRange } from "@/lib/utils";
 
 type RequestDetailProps = {
@@ -17,7 +18,7 @@ type RequestDetailProps = {
 
 export async function generateMetadata({ params }: RequestDetailProps) {
   const { requestId } = await params;
-  const request = getRequestById(requestId);
+  const request = await loadRequestById(requestId);
 
   return {
     title: request?.title ?? "도움 요청 상세",
@@ -27,15 +28,17 @@ export async function generateMetadata({ params }: RequestDetailProps) {
 
 export default async function RequestDetailPage({ params }: RequestDetailProps) {
   const { requestId } = await params;
-  const request = getRequestById(requestId);
+  const [request, subjects, mentors, currentUser] = await Promise.all([
+    loadRequestById(requestId), loadSubjects(), loadMentors(), loadCurrentProfile(),
+  ]);
 
   if (!request) {
     notFound();
   }
 
-  const subject = getSubjectById(request.subjectId);
-  const recommendations = getRecommendedMentorsForRequest(request, 4);
-  const isOwner = request.menteeId === demoCurrentUser.id;
+  const subject = subjects.find((item) => item.id === request.subjectId);
+  const recommendations = rankRecommendedMentors(request, mentors).slice(0, 4);
+  const isOwner = request.menteeId === currentUser.id;
 
   return (
     <AppShell>
@@ -45,8 +48,8 @@ export default async function RequestDetailPage({ params }: RequestDetailProps) 
         title={request.title}
       />
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_380px]">
-        <div className="space-y-6">
+      <div className="mt-6 grid gap-6 2xl:grid-cols-[minmax(0,1fr)_380px]">
+        <div className="min-w-0 space-y-6">
           <section className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
             <div className="flex flex-wrap items-center gap-2">
               <SubjectBadge>{subject?.name ?? "과목"}</SubjectBadge>
@@ -91,13 +94,14 @@ export default async function RequestDetailPage({ params }: RequestDetailProps) 
             {recommendations.length > 0 ? (
               <div className="mt-4 grid gap-4">
                 {recommendations.map(({ mentor, result }) => (
-                  <article className="rounded-lg border border-zinc-200 bg-zinc-50 p-4" key={mentor.profile.id}>
+                  <article className="min-w-0 rounded-lg border border-zinc-200 bg-zinc-50 p-4" key={mentor.profile.id}>
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div>
-                        <h3 className="font-bold text-zinc-950">{mentor.profile.displayName}</h3>
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold text-emerald-800">멘토 닉네임</p>
+                        <h3 className="mt-1 break-words font-semibold text-zinc-950">{mentor.profile.displayName}</h3>
                         <p className="mt-1 text-sm text-zinc-600">{mentor.profile.grade}학년 · 평점 {mentor.averageRating?.toFixed(1) ?? "평가 없음"}</p>
                       </div>
-                      <span className="rounded-full bg-emerald-700 px-3 py-1 text-xs font-bold text-white">{result.score}점</span>
+                      <span className="shrink-0 rounded-full bg-emerald-700 px-3 py-1 text-xs font-bold text-white">{result.score}점</span>
                     </div>
                     <ul className="mt-3 space-y-1 text-sm leading-6 text-zinc-700">
                       {result.reasons.slice(0, 4).map((reason) => (
@@ -105,7 +109,7 @@ export default async function RequestDetailPage({ params }: RequestDetailProps) 
                       ))}
                     </ul>
                     <div className="mt-4">
-                      <LinkButton href={`/mentors/${mentor.profile.id}`} variant="secondary">프로필 보기</LinkButton>
+                      <LinkButton className="w-full sm:w-auto" href={`/mentors/${mentor.profile.id}`} variant="secondary">프로필 보기</LinkButton>
                     </div>
                   </article>
                 ))}
@@ -127,8 +131,12 @@ export default async function RequestDetailPage({ params }: RequestDetailProps) 
             </section>
           ) : null}
 
-          {recommendations[0] ? (
-            <ApplicationPanel currentUserId={demoCurrentUser.id} learningRequestId={request.id} mentor={recommendations[0].mentor} />
+          {isOwner && recommendations[0] ? (
+            <ApplicationPanel currentUserId={currentUser.id} learningRequestId={request.id} mentor={recommendations[0].mentor} />
+          ) : !isOwner ? (
+            <section className="rounded-lg border border-zinc-200 bg-white p-5 text-sm leading-6 text-zinc-700">
+              다른 학생의 요청입니다. 본인의 도움 요청에서 추천된 멘토에게 신청할 수 있습니다.
+            </section>
           ) : (
             <section className="rounded-lg border border-zinc-200 bg-white p-5 text-sm leading-6 text-zinc-700">
               이 요청과 정확히 맞는 멘토가 아직 없습니다.

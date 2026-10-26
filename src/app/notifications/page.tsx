@@ -5,14 +5,14 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { AppShell } from "@/components/layout/AppShell";
 import { MarkAllNotificationsButton } from "@/components/notifications/MarkAllNotificationsButton";
 import { NotificationItem } from "@/components/notifications/NotificationItem";
-import { demoCurrentUser, demoNotifications } from "@/lib/demo/data";
+import { loadNotifications } from "@/lib/data/studybridge";
 
 export const metadata = {
   title: "알림",
 };
 
-export default function NotificationsPage() {
-  const notifications = demoNotifications.filter((notification) => notification.userId === demoCurrentUser.id);
+export default async function NotificationsPage() {
+  const notifications = await loadNotifications();
   const unreadCount = notifications.filter((notification) => !notification.isRead).length;
 
   return (

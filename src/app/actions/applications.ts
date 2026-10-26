@@ -79,20 +79,9 @@ export async function rejectApplication(applicationId: string): Promise<ActionRe
   }
 
   const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { ok: false, message: "로그인이 필요합니다.", redirectTo: "/login" };
-  }
-
-  const { error } = await supabase
-    .from("mentoring_applications")
-    .update({ status: "rejected", responded_at: new Date().toISOString() })
-    .eq("id", applicationId)
-    .eq("mentor_id", user.id)
-    .eq("status", "pending");
+  const { error } = await supabase.rpc("reject_mentoring_application", {
+    application_id: applicationId,
+  });
 
   if (error) {
     return { ok: false, message: "신청을 거절하지 못했습니다." };

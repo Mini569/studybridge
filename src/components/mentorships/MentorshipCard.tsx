@@ -2,20 +2,18 @@ import { ArrowRight, BookOpen, CalendarCheck } from "lucide-react";
 
 import { LinkButton } from "@/components/common/Button";
 import { StatusBadge } from "@/components/common/StatusBadge";
-import { BASE_SUBJECTS } from "@/lib/constants/options";
-import { demoSessions, getProfileById } from "@/lib/demo/data";
 import { formatDateTime } from "@/lib/utils";
-import type { Mentorship } from "@/types/domain";
+import type { MentoringSession, Mentorship } from "@/types/domain";
 
 interface MentorshipCardProps {
   mentorship: Mentorship;
+  mentorName: string;
+  menteeName: string;
+  subjectName: string;
+  sessions: MentoringSession[];
 }
 
-export function MentorshipCard({ mentorship }: MentorshipCardProps) {
-  const mentor = getProfileById(mentorship.mentorId);
-  const mentee = getProfileById(mentorship.menteeId);
-  const subject = BASE_SUBJECTS.find((item) => item.id === mentorship.subjectId);
-  const sessions = demoSessions.filter((session) => session.mentorshipId === mentorship.id);
+export function MentorshipCard({ mentorship, mentorName, menteeName, subjectName, sessions }: MentorshipCardProps) {
   const nextSession = sessions.find((session) => session.status === "scheduled");
   const completedCount = sessions.filter((session) => session.status === "completed").length;
 
@@ -25,7 +23,7 @@ export function MentorshipCard({ mentorship }: MentorshipCardProps) {
         <div>
           <p className="flex items-center gap-2 text-sm font-semibold text-emerald-800">
             <BookOpen aria-hidden="true" className="h-4 w-4" />
-            {subject?.name ?? "과목"}
+            {subjectName}
           </p>
           <h2 className="mt-2 text-lg font-bold text-zinc-950">{mentorship.goal}</h2>
         </div>
@@ -35,11 +33,11 @@ export function MentorshipCard({ mentorship }: MentorshipCardProps) {
       <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
         <div>
           <dt className="text-zinc-500">멘토</dt>
-          <dd className="mt-1 font-medium text-zinc-900">{mentor?.displayName ?? "멘토"}</dd>
+          <dd className="mt-1 font-medium text-zinc-900">{mentorName}</dd>
         </div>
         <div>
           <dt className="text-zinc-500">멘티</dt>
-          <dd className="mt-1 font-medium text-zinc-900">{mentee?.displayName ?? "멘티"}</dd>
+          <dd className="mt-1 font-medium text-zinc-900">{menteeName}</dd>
         </div>
         <div>
           <dt className="text-zinc-500">완료 세션</dt>

@@ -2,16 +2,21 @@
 
 StudyBridge는 교내 학생이 학습 도움 요청을 등록하고, 과목과 시간 조건에 맞는 또래 멘토를 찾아 멘토링 신청, 세션 기록, 피드백까지 관리하는 Next.js 웹서비스입니다.
 
+운영 사이트: https://studybridge-ashy.vercel.app
+
 ## 핵심 기능
 
 - 이메일/비밀번호 기반 회원가입, 로그인, 온보딩 구조
 - 멘토 활동 설정, 과목/세부 단원/가능 시간 등록 구조
 - 멘토 목록 검색, URL 쿼리 기반 필터와 정렬
-- 학습 도움 요청 작성, 목록, 상세, 추천 멘토 표시
+- 실제 Supabase 과목 UUID를 사용하는 학습 도움 요청 작성, 목록, 상세, 추천 멘토 표시
 - 신청 승인/거절/취소 서버 액션과 PostgreSQL 트랜잭션 함수
 - 멘토링 목록, 상세, 세션 등록, 완료 처리, 피드백 작성
 - 세부 평가 항목, 개선 태그, 후속 조치 여부를 포함한 구조화 피드백
 - 알림 목록과 읽음 처리
+- 온보딩 관심 과목, 멘토 가능 과목·요일·시간의 실제 DB 저장
+- 사용자별 요청·신청·멘토링·세션·피드백·알림의 실제 DB 조회
+- 세션 완료 활동 기록과 완료 후 구조화 피드백 작성
 - 관리자 지표, 멘토 중지, 요청 숨김, 신고 처리
 - 관리자 피드백 인사이트와 우선 개선 액션
 - Supabase PostgreSQL 마이그레이션, RLS 정책, seed 절차
@@ -85,7 +90,7 @@ NEXT_PUBLIC_DEMO_MODE=false
 2. Project Settings에서 URL과 anon key를 `.env.local`에 입력합니다.
 3. service role key는 로컬 seed나 관리자 서버 작업에만 사용합니다.
 4. SQL Editor 또는 Supabase CLI로 마이그레이션을 적용합니다.
-5. Auth redirect URL에 `http://localhost:3000`, Vercel 운영 도메인, `https://*.vercel.app`을 등록합니다.
+5. Auth redirect URL에 `http://localhost:3000/auth/callback`, `https://studybridge-ashy.vercel.app/auth/callback`, 필요한 Vercel Preview의 `/auth/callback` 주소를 등록합니다. 이메일 확인이 켜져 있으면 확인 링크를 누른 뒤 이 경로에서 세션과 학습 프로필이 준비됩니다.
 
 ## SQL 마이그레이션 실행 순서
 
@@ -101,6 +106,7 @@ supabase/migrations/20260825075323_0001_initial_schema.sql
 supabase/migrations/20260825075440_0002_rls_policies.sql
 supabase/migrations/20260825075454_0003_structured_feedback.sql
 supabase/migrations/20260825075844_0004_harden_rls_helpers.sql
+supabase/migrations/20261026090000_0005_complete_real_data_flow.sql
 supabase/seed.sql
 ```
 
@@ -113,6 +119,8 @@ supabase/seed.sql
 - 알림은 본인만 조회하고 읽음 처리합니다.
 - 관리자 작업은 `profiles.role = admin`인 사용자만 수행합니다.
 - `accept_mentoring_application`, `cancel_mentoring_application`, `complete_mentorship` 함수는 `SECURITY DEFINER`와 명시적 `search_path`를 사용하고 내부에서 `auth.uid()`를 다시 확인합니다.
+- `reject_mentoring_application`, `get_mentor_stats`도 인증 여부와 대상 사용자 관계를 내부에서 확인합니다.
+- 요청 소유자만 해당 요청으로 멘토링을 신청할 수 있고, 상태 변경은 승인·거절·취소 전용 함수 또는 관리자 정책으로 제한합니다.
 
 ## 초기 데이터 입력
 

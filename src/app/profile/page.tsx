@@ -4,29 +4,23 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { SubjectBadge } from "@/components/common/SubjectBadge";
 import { ProfileForm } from "@/components/forms/ProfileForm";
 import { AppShell } from "@/components/layout/AppShell";
-import { BASE_SUBJECTS } from "@/lib/constants/options";
-import { demoCurrentUser, demoMentors, demoMentorships } from "@/lib/demo/data";
+import { loadProfilePageData, loadSubjects } from "@/lib/data/studybridge";
 
 export const metadata = {
   title: "프로필",
 };
 
-export default function ProfilePage() {
-  const mentor = demoMentors.find((item) => item.profile.id === demoCurrentUser.id);
-  const completedMentorships = demoMentorships.filter(
-    (mentorship) =>
-      mentorship.status === "completed" &&
-      (mentorship.mentorId === demoCurrentUser.id || mentorship.menteeId === demoCurrentUser.id),
-  ).length;
-  const mentorCount = demoMentorships.filter((mentorship) => mentorship.mentorId === demoCurrentUser.id).length;
-  const menteeCount = demoMentorships.filter((mentorship) => mentorship.menteeId === demoCurrentUser.id).length;
+export default async function ProfilePage() {
+  const [{ profile, mentor, completedMentorships, mentorCount, menteeCount, averageRating }, subjects] = await Promise.all([
+    loadProfilePageData(), loadSubjects(),
+  ]);
 
   return (
     <AppShell>
       <PageHeader description="표시 이름, 학년, 자기소개와 멘토 활동 정보를 관리합니다." title="프로필" />
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_360px]">
-        <ProfileForm mentor={mentor} profile={demoCurrentUser} />
+        <ProfileForm mentor={mentor} profile={profile} subjects={subjects} />
 
         <aside className="space-y-6">
           <section className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
@@ -49,7 +43,7 @@ export default function ProfilePage() {
                   <Star aria-hidden="true" className="h-4 w-4" />
                   평균 점수
                 </dt>
-                <dd className="mt-1 text-2xl font-bold text-zinc-950">4.8</dd>
+                <dd className="mt-1 text-2xl font-bold text-zinc-950">{averageRating?.toFixed(1) ?? "-"}</dd>
               </div>
             </dl>
           </section>
@@ -60,13 +54,13 @@ export default function ProfilePage() {
               관심 과목
             </h2>
             <div className="mt-4 flex flex-wrap gap-2">
-              {demoCurrentUser.interests.map((subject) => (
+              {profile.interests.map((subject) => (
                 <SubjectBadge key={subject}>{subject}</SubjectBadge>
               ))}
             </div>
             <h3 className="mt-5 text-sm font-bold text-zinc-950">도움받고 싶은 과목</h3>
             <div className="mt-3 flex flex-wrap gap-2">
-              {demoCurrentUser.needs.map((subject) => (
+              {profile.needs.map((subject) => (
                 <SubjectBadge key={subject}>{subject}</SubjectBadge>
               ))}
             </div>
@@ -78,7 +72,7 @@ export default function ProfilePage() {
               <div className="mt-4 space-y-3">
                 {mentor.subjects.map((subject) => (
                   <div className="rounded-lg bg-zinc-50 p-3" key={subject.id}>
-                    <p className="font-semibold text-zinc-950">{BASE_SUBJECTS.find((item) => item.id === subject.subjectId)?.name}</p>
+                    <p className="font-semibold text-zinc-950">{subjects.find((item) => item.id === subject.subjectId)?.name ?? "과목"}</p>
                     <p className="mt-1 text-sm text-zinc-600">{subject.topics.join(", ")}</p>
                   </div>
                 ))}

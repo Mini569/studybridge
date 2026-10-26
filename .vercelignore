@@ -1,10 +1,12 @@
 .git
 .github
 .next
+.env.local
 coverage
 node_modules
 test-results
 tests
+tmp
 docs
 supabase/.branches
 supabase/.temp

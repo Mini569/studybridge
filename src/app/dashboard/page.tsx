@@ -5,7 +5,7 @@ import { EmptyState } from "@/components/common/EmptyState";
 import { PageHeader } from "@/components/common/PageHeader";
 import { AppShell } from "@/components/layout/AppShell";
 import { MentorCard } from "@/components/mentors/MentorCard";
-import { demoCurrentUser, demoMentors, getDashboardStats, recentActivity } from "@/lib/demo/data";
+import { loadDashboardData, loadSubjects } from "@/lib/data/studybridge";
 
 export const metadata = {
   title: "대시보드",
@@ -13,8 +13,8 @@ export const metadata = {
 
 const statIcons = [Inbox, Bell, UsersRound, CalendarDays, BookOpenCheck];
 
-export default function DashboardPage() {
-  const stats = getDashboardStats(demoCurrentUser.id);
+export default async function DashboardPage() {
+  const [{ stats, recommendedMentors, activity }, subjects] = await Promise.all([loadDashboardData(), loadSubjects()]);
   const statItems = [
     { label: "보낸 대기 신청", value: stats.sentPendingApplications },
     { label: "받은 대기 신청", value: stats.receivedPendingApplications },
@@ -22,7 +22,6 @@ export default function DashboardPage() {
     { label: "예정된 세션", value: stats.upcomingSessions },
     { label: "완료한 멘토링", value: stats.completedMentorships },
   ];
-  const recommendedMentors = demoMentors.slice(0, 3);
 
   return (
     <AppShell>
@@ -57,13 +56,13 @@ export default function DashboardPage() {
         })}
       </section>
 
-      <section className="mt-8 grid gap-6 lg:grid-cols-[1fr_340px]">
-        <div>
+      <section className="mt-8 grid gap-6 2xl:grid-cols-[minmax(0,1fr)_340px]">
+        <div className="min-w-0">
           <h2 className="text-xl font-bold text-zinc-950">추천 멘토</h2>
           {recommendedMentors.length > 0 ? (
-            <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {recommendedMentors.map((mentor) => (
-                <MentorCard key={mentor.profile.id} mentor={mentor} />
+            <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+              {recommendedMentors.map(({ mentor, result }) => (
+                <MentorCard key={mentor.profile.id} mentor={mentor} score={result} subjects={subjects} />
               ))}
             </div>
           ) : (
@@ -82,11 +81,11 @@ export default function DashboardPage() {
           <section className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
             <h2 className="text-lg font-bold text-zinc-950">최근 활동</h2>
             <ul className="mt-4 space-y-3 text-sm leading-6 text-zinc-700">
-              {recentActivity.map((activity) => (
-                <li className="border-b border-zinc-100 pb-3 last:border-b-0 last:pb-0" key={activity}>
-                  {activity}
+              {activity.length > 0 ? activity.map((item) => (
+                <li className="border-b border-zinc-100 pb-3 last:border-b-0 last:pb-0" key={item}>
+                  {item}
                 </li>
-              ))}
+              )) : <li className="text-zinc-500">아직 최근 활동이 없습니다.</li>}
             </ul>
           </section>
 

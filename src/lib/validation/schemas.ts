@@ -12,7 +12,7 @@ export const loginSchema = z.object({
 
 export const signupSchema = z
   .object({
-    displayName: z.string().trim().min(2, "표시 이름은 2자 이상이어야 합니다.").max(30, "표시 이름은 30자 이하입니다."),
+    displayName: z.string().trim().min(2, "닉네임은 2자 이상이어야 합니다.").max(30, "닉네임은 30자 이하입니다."),
     email: z.email("이메일 형식이 올바르지 않습니다."),
     password: z.string().min(8, "비밀번호는 최소 8자입니다."),
     confirmPassword: z.string().min(8, "비밀번호 확인을 입력해 주세요."),
@@ -24,13 +24,7 @@ export const signupSchema = z
     message: "비밀번호가 일치하지 않습니다.",
   });
 
-export const onboardingSchema = z.object({
-  displayName: z.string().trim().min(2, "표시 이름은 2자 이상이어야 합니다.").max(30, "표시 이름은 30자 이하입니다."),
-  grade: gradeSchema,
-  bio: z.string().trim().max(300, "자기소개는 300자 이하입니다.").optional(),
-  interests: z.array(z.string()).min(1, "관심 과목을 하나 이상 선택해 주세요."),
-  needs: z.array(z.string()).min(1, "도움받고 싶은 과목을 하나 이상 선택해 주세요."),
-  wantsToMentor: z.boolean(),
+const mentorAvailabilityFields = {
   mentorSubjectIds: z.array(z.string()).default([]),
   mentorTopics: z.string().max(300, "세부 단원은 300자 이하로 입력해 주세요.").optional(),
   proficiencyLevel: z.coerce.number().int().min(1).max(5).optional(),
@@ -38,15 +32,45 @@ export const onboardingSchema = z.object({
   availableStartTime: z.string().optional(),
   availableEndTime: z.string().optional(),
   maxActiveMentees: z.coerce.number().int().min(1).max(10).default(3),
+};
+
+function hasValidMentorDetails(value: {
+  wantsToMentor?: boolean;
+  mentorEnabled?: boolean;
+  mentorSubjectIds: string[];
+  availableDays: number[];
+  availableStartTime?: string;
+  availableEndTime?: string;
+}) {
+  const enabled = value.wantsToMentor ?? value.mentorEnabled ?? false;
+  if (!enabled) return true;
+  return value.mentorSubjectIds.length > 0 && value.availableDays.length > 0 &&
+    Boolean(value.availableStartTime && value.availableEndTime && value.availableEndTime > value.availableStartTime);
+}
+
+export const onboardingSchema = z.object({
+  displayName: z.string().trim().min(2, "닉네임은 2자 이상이어야 합니다.").max(30, "닉네임은 30자 이하입니다."),
+  grade: gradeSchema,
+  bio: z.string().trim().max(300, "자기소개는 300자 이하입니다.").optional(),
+  interests: z.array(z.string()).min(1, "관심 과목을 하나 이상 선택해 주세요."),
+  needs: z.array(z.string()).min(1, "도움받고 싶은 과목을 하나 이상 선택해 주세요."),
+  wantsToMentor: z.boolean(),
+  ...mentorAvailabilityFields,
+}).refine(hasValidMentorDetails, {
+  path: ["mentorSubjectIds"],
+  message: "멘토 활동 시 과목, 가능 요일과 올바른 시간 범위를 모두 입력해 주세요.",
 });
 
 export const mentorProfileSchema = z.object({
-  displayName: z.string().trim().min(2, "표시 이름은 2자 이상이어야 합니다.").max(30, "표시 이름은 30자 이하입니다."),
+  displayName: z.string().trim().min(2, "닉네임은 2자 이상이어야 합니다.").max(30, "닉네임은 30자 이하입니다."),
   grade: gradeSchema,
   bio: z.string().trim().max(500, "자기소개는 500자 이하입니다.").optional(),
   mentorEnabled: z.coerce.boolean(),
   introduction: z.string().trim().max(800, "멘토 소개는 800자 이하입니다.").optional(),
-  maxActiveMentees: z.coerce.number().int().min(1, "최소 1명 이상이어야 합니다.").max(10, "최대 10명까지 가능합니다."),
+  ...mentorAvailabilityFields,
+}).refine(hasValidMentorDetails, {
+  path: ["mentorSubjectIds"],
+  message: "멘토 활동 시 과목, 가능 요일과 올바른 시간 범위를 모두 입력해 주세요.",
 });
 
 export const learningRequestSchema = z.object({
@@ -79,6 +103,12 @@ export const sessionSchema = z.object({
   durationMinutes: z.coerce.number().int().min(10, "최소 10분 이상이어야 합니다.").max(240, "최대 240분입니다."),
   topic: z.string().trim().min(2, "학습 주제를 입력해 주세요.").max(120, "학습 주제는 120자 이하입니다."),
   locationType: z.enum(["classroom", "library", "self_study", "online", "campus"]),
+});
+
+export const completeSessionSchema = z.object({
+  sessionId: z.string().min(1),
+  mentorshipId: z.string().min(1),
+  note: z.string().trim().min(10, "활동 기록은 10자 이상 작성해 주세요.").max(1000, "활동 기록은 1000자 이하입니다."),
 });
 
 const feedbackRatingSchema = z.coerce.number().int().min(1, "평점을 선택해 주세요.").max(5, "평점은 5점 이하입니다.");

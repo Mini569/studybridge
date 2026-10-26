@@ -1,9 +1,18 @@
 import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
 import { setTimeout as delay } from "node:timers/promises";
 import { strict as assert } from "node:assert";
-import { chromium } from "@playwright/test";
+import { chromium, type Browser, type Page } from "@playwright/test";
 
 const baseUrl = "http://localhost:3000";
+
+async function assertNoHorizontalOverflow(page: Page, description: string) {
+  const { viewportWidth, contentWidth } = await page.evaluate(() => ({
+    viewportWidth: window.innerWidth,
+    contentWidth: document.documentElement.scrollWidth,
+  }));
+
+  assert(contentWidth <= viewportWidth + 1, `${description}: content ${contentWidth}px exceeds viewport ${viewportWidth}px.`);
+}
 
 async function isServerReady() {
   try {
@@ -77,11 +86,12 @@ async function stopServer(server: ChildProcessWithoutNullStreams | null) {
 async function run() {
   const serverAlreadyRunning = await isServerReady();
   const server = serverAlreadyRunning ? null : startServer();
+  let browser: Browser | null = null;
 
   try {
     await waitForServer();
 
-    const browser = await chromium.launch();
+    browser = await chromium.launch();
     const page = await browser.newPage();
 
     await page.goto(baseUrl);
@@ -106,9 +116,36 @@ async function run() {
     await page.waitForURL(/\/requests/, { timeout: 10_000 });
     await page.getByRole("heading", { name: "학습 도움 요청" }).waitFor({ state: "visible" });
 
-    await browser.close();
+    for (const [width, height] of [[320, 568], [390, 844], [768, 1024], [1024, 768], [1440, 900]]) {
+      await page.setViewportSize({ width, height });
+      await page.goto(`${baseUrl}/mentors`);
+      await page.getByRole("heading", { name: "멘토 찾기" }).waitFor({ state: "visible" });
+      await assertNoHorizontalOverflow(page, `멘토 찾기 ${width}px`);
+
+      const columns = await page.locator("article").first().evaluate((card) =>
+        getComputedStyle(card.parentElement!).gridTemplateColumns.split(" ").length,
+      );
+      assert.equal(columns, width >= 1280 ? 3 : width >= 768 ? 2 : 1, `Unexpected mentor columns at ${width}px.`);
+
+      if (width < 1024) {
+        await page.locator('summary[aria-label="메뉴 열기"]').click();
+        await page.getByRole("navigation", { name: "주요 메뉴" }).first().getByRole("link", { name: "내 신청" }).waitFor({ state: "visible" });
+        await assertNoHorizontalOverflow(page, `열린 메뉴 ${width}px`);
+        const menuBounds = await page.getByRole("navigation", { name: "주요 메뉴" }).first().locator("..").boundingBox();
+        assert(menuBounds && menuBounds.x >= 0 && menuBounds.x + menuBounds.width <= width + 1, `Menu exceeds ${width}px viewport.`);
+        assert(menuBounds.y + menuBounds.height <= height + 1, `Menu ends at ${menuBounds.y + menuBounds.height}px beyond ${height}px viewport height.`);
+      }
+    }
+
+    await page.setViewportSize({ width: 320, height: 800 });
+    for (const path of ["/dashboard", "/requests/new", "/applications", "/signup"]) {
+      await page.goto(`${baseUrl}${path}`);
+      await assertNoHorizontalOverflow(page, `${path} 320px`);
+    }
+
     console.log("E2E demo flow passed.");
   } finally {
+    await browser?.close();
     await stopServer(server);
   }
 }

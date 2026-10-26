@@ -2,6 +2,8 @@
 
 이 문서는 StudyBridge를 GitHub 저장소, Vercel 배포, Supabase 운영 DB에 연결하기 위한 절차입니다. 비밀키는 저장소에 커밋하지 않고 GitHub Secrets, Vercel Environment Variables, 로컬 `.env.local`에만 저장합니다.
 
+현재 운영 주소는 `https://studybridge-ashy.vercel.app`입니다.
+
 ## 1. GitHub 저장소 연결
 
 현재 로컬 프로젝트에는 원격 저장소가 연결되어 있지 않습니다. GitHub에서 빈 저장소를 만든 뒤 아래 명령으로 연결합니다.
@@ -44,12 +46,14 @@ NEXT_PUBLIC_SITE_URL=
 NEXT_PUBLIC_DEMO_MODE=false
 ```
 
-4. Auth redirect URL에 로컬과 Vercel 주소를 등록합니다.
+4. Auth redirect URL에 이메일 가입 확인용 복귀 주소를 등록합니다. `NEXT_PUBLIC_SITE_URL`은 해당 환경의 실제 사이트 주소로 설정합니다.
 
 ```text
 http://localhost:3000
-https://*.vercel.app
-운영 Vercel 도메인
+http://localhost:3000/auth/callback
+https://studybridge-ashy.vercel.app
+https://studybridge-ashy.vercel.app/auth/callback
+필요한 Vercel Preview 주소
 ```
 
 5. Supabase CLI로 프로젝트를 연결하고 마이그레이션을 적용합니다.
@@ -66,6 +70,7 @@ supabase/migrations/20260825075323_0001_initial_schema.sql
 supabase/migrations/20260825075440_0002_rls_policies.sql
 supabase/migrations/20260825075454_0003_structured_feedback.sql
 supabase/migrations/20260825075844_0004_harden_rls_helpers.sql
+supabase/migrations/20261026090000_0005_complete_real_data_flow.sql
 supabase/seed.sql
 ```
 
@@ -74,7 +79,8 @@ supabase/seed.sql
 1. Vercel에서 GitHub 저장소를 Import 합니다.
 2. Framework Preset은 Next.js를 사용합니다.
 3. Environment Variables에 `.env.example`의 운영 값을 입력합니다. Supabase 공개 키는 `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`를 우선 사용하고, 기존 `anon public key`만 있는 프로젝트는 `NEXT_PUBLIC_SUPABASE_ANON_KEY`를 입력합니다. 현재 저장소에는 공개 Supabase URL/key가 `.env.production`에 들어 있어 Vercel Git 배포가 실제 Supabase 프로젝트에 연결됩니다.
-4. 첫 연결 이후 로컬에서 Vercel 프로젝트 정보를 내려받을 수 있습니다.
+4. `vercel.json`의 설치 명령은 플랫폼별 선택 의존성을 포함하도록 `npm install --include=optional`을 사용합니다. `.vercelignore`는 로컬 환경 파일과 임시 산출물을 업로드에서 제외합니다.
+5. 첫 연결 이후 로컬에서 Vercel 프로젝트 정보를 내려받을 수 있습니다.
 
 ```bash
 npm run vercel:pull
@@ -98,6 +104,10 @@ GitHub Actions 배포는 `.github/workflows/vercel.yml`이 담당합니다. PR�
 - `npm run build`
 - `npm run test:e2e`
 - Supabase 마이그레이션 적용 완료
+- `public.subjects`에 기본 과목 10개 입력 완료
+- 실제 모드에서 가입 → 온보딩 → 요청 작성 → 추천·신청 → 세션·피드백 흐름 확인
 - Vercel 환경변수 입력 완료
 - GitHub Secrets 입력 완료
 - 운영 `NEXT_PUBLIC_SITE_URL`이 실제 Vercel 도메인과 일치
+- Supabase 프로젝트가 활성 상태이고 이메일 가입이 허용되어 있음
+- 이메일 확인을 사용하는 경우 `/auth/callback`이 Redirect URLs에 등록되어 있음

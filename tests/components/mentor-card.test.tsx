@@ -12,6 +12,7 @@ describe("MentorCard", () => {
     render(<MentorCard mentor={mentor!} />);
 
     expect(screen.getByText("박지호")).toBeInTheDocument();
+    expect(screen.getByText("멘토 닉네임")).toBeInTheDocument();
     expect(screen.getByText("수학")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /프로필 보기/ })).toHaveAttribute("href", "/mentors/mentor-jiho");
   });

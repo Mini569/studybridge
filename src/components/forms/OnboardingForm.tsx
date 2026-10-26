@@ -10,13 +10,14 @@ import type { z } from "zod";
 import { completeOnboarding } from "@/app/actions/auth";
 import { Button } from "@/components/common/Button";
 import { FormField, inputStyles, textareaStyles } from "@/components/forms/FormField";
-import { BASE_SUBJECTS, DAY_OPTIONS, GRADE_OPTIONS } from "@/lib/constants/options";
+import { DAY_OPTIONS, GRADE_OPTIONS } from "@/lib/constants/options";
 import { onboardingSchema } from "@/lib/validation/schemas";
+import type { Subject } from "@/types/domain";
 
 type OnboardingFormValues = z.input<typeof onboardingSchema>;
 type OnboardingInput = z.output<typeof onboardingSchema>;
 
-export function OnboardingForm() {
+export function OnboardingForm({ subjects }: { subjects: Subject[] }) {
   const router = useRouter();
   const [serverMessage, setServerMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -60,7 +61,7 @@ export function OnboardingForm() {
   return (
     <form className="space-y-6" onSubmit={handleSubmit(submit)}>
       <div className="grid gap-5 sm:grid-cols-2">
-        <FormField error={errors.displayName?.message} htmlFor="displayName" label="표시 이름">
+        <FormField error={errors.displayName?.message} htmlFor="displayName" label="닉네임">
           <input className={inputStyles} id="displayName" {...register("displayName")} />
         </FormField>
         <FormField error={errors.grade?.message} htmlFor="grade" label="학년">
@@ -81,7 +82,7 @@ export function OnboardingForm() {
       <fieldset>
         <legend className="text-sm font-semibold text-zinc-900">관심 과목</legend>
         <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          {BASE_SUBJECTS.slice(0, 8).map((subject) => (
+          {subjects.map((subject) => (
             <label className="flex items-center gap-2 rounded-lg border border-zinc-200 bg-white p-3 text-sm" key={subject.id}>
               <input className="h-4 w-4 accent-emerald-700" type="checkbox" value={subject.name} {...register("interests")} />
               {subject.name}
@@ -94,7 +95,7 @@ export function OnboardingForm() {
       <fieldset>
         <legend className="text-sm font-semibold text-zinc-900">도움받고 싶은 과목</legend>
         <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          {BASE_SUBJECTS.slice(0, 8).map((subject) => (
+          {subjects.map((subject) => (
             <label className="flex items-center gap-2 rounded-lg border border-zinc-200 bg-white p-3 text-sm" key={subject.id}>
               <input className="h-4 w-4 accent-emerald-700" type="checkbox" value={subject.name} {...register("needs")} />
               {subject.name}
@@ -118,13 +119,14 @@ export function OnboardingForm() {
           <fieldset>
             <legend className="text-sm font-semibold text-zinc-900">멘토링 가능한 과목</legend>
             <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              {BASE_SUBJECTS.slice(0, 8).map((subject) => (
+              {subjects.map((subject) => (
                 <label className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-white p-3 text-sm" key={subject.id}>
                   <input className="h-4 w-4 accent-emerald-700" type="checkbox" value={subject.id} {...register("mentorSubjectIds")} />
                   {subject.name}
                 </label>
               ))}
             </div>
+            {errors.mentorSubjectIds ? <p className="mt-2 text-xs font-medium text-red-700">{errors.mentorSubjectIds.message}</p> : null}
           </fieldset>
 
           <FormField error={errors.mentorTopics?.message} htmlFor="mentorTopics" label="자신 있는 세부 단원">

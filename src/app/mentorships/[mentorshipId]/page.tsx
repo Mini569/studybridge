@@ -7,8 +7,9 @@ import { FeedbackForm } from "@/components/forms/FeedbackForm";
 import { SessionForm } from "@/components/forms/SessionForm";
 import { AppShell } from "@/components/layout/AppShell";
 import { CompleteMentorshipButton } from "@/components/mentorships/CompleteMentorshipButton";
-import { BASE_SUBJECTS, LOCATION_LABELS } from "@/lib/constants/options";
-import { demoCurrentUser, demoFeedback, demoSessions, getMentorshipById, getProfileById } from "@/lib/demo/data";
+import { CompleteSessionForm } from "@/components/mentorships/CompleteSessionForm";
+import { LOCATION_LABELS } from "@/lib/constants/options";
+import { loadCurrentProfile, loadMentorshipById } from "@/lib/data/studybridge";
 import { buildFeedbackInsights } from "@/lib/feedback/insights";
 import { formatDateTime } from "@/lib/utils";
 
@@ -18,31 +19,27 @@ type MentorshipDetailProps = {
 
 export async function generateMetadata({ params }: MentorshipDetailProps) {
   const { mentorshipId } = await params;
-  const mentorship = getMentorshipById(mentorshipId);
+  const detail = await loadMentorshipById(mentorshipId);
 
   return {
-    title: mentorship ? "멘토링 상세" : "멘토링",
-    description: mentorship?.goal,
+    title: detail ? "멘토링 상세" : "멘토링",
+    description: detail?.mentorship.goal,
   };
 }
 
 export default async function MentorshipDetailPage({ params }: MentorshipDetailProps) {
   const { mentorshipId } = await params;
-  const mentorship = getMentorshipById(mentorshipId);
+  const [detail, currentUser] = await Promise.all([loadMentorshipById(mentorshipId), loadCurrentProfile()]);
 
-  if (!mentorship) {
+  if (!detail) {
     notFound();
   }
 
-  const mentor = getProfileById(mentorship.mentorId);
-  const mentee = getProfileById(mentorship.menteeId);
-  const subject = BASE_SUBJECTS.find((item) => item.id === mentorship.subjectId);
-  const sessions = demoSessions.filter((session) => session.mentorshipId === mentorship.id);
+  const { mentorship, mentorName, menteeName, subjectName, sessions, feedback } = detail;
   const completedSession = sessions.find((session) => session.status === "completed");
-  const sessionIds = new Set(sessions.map((session) => session.id));
-  const feedback = demoFeedback.filter((item) => sessionIds.has(item.sessionId));
+  const alreadySubmittedFeedback = completedSession ? feedback.some((item) => item.sessionId === completedSession.id && item.authorId === currentUser.id) : false;
   const feedbackInsights = buildFeedbackInsights(feedback);
-  const targetUserId = demoCurrentUser.id === mentorship.mentorId ? mentorship.menteeId : mentorship.mentorId;
+  const targetUserId = currentUser.id === mentorship.mentorId ? mentorship.menteeId : mentorship.mentorId;
 
   return (
     <AppShell>
@@ -57,7 +54,7 @@ export default async function MentorshipDetailPage({ params }: MentorshipDetailP
           <section className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <p className="text-sm font-semibold text-emerald-800">{subject?.name ?? "과목"}</p>
+                <p className="text-sm font-semibold text-emerald-800">{subjectName}</p>
                 <h2 className="mt-2 text-xl font-bold text-zinc-950">{mentorship.goal}</h2>
               </div>
               <StatusBadge status={mentorship.status} />
@@ -65,11 +62,11 @@ export default async function MentorshipDetailPage({ params }: MentorshipDetailP
             <dl className="mt-5 grid gap-4 sm:grid-cols-2">
               <div>
                 <dt className="text-sm text-zinc-500">멘토</dt>
-                <dd className="mt-1 font-semibold text-zinc-950">{mentor?.displayName ?? "멘토"}</dd>
+                <dd className="mt-1 font-semibold text-zinc-950">{mentorName}</dd>
               </div>
               <div>
                 <dt className="text-sm text-zinc-500">멘티</dt>
-                <dd className="mt-1 font-semibold text-zinc-950">{mentee?.displayName ?? "멘티"}</dd>
+                <dd className="mt-1 font-semibold text-zinc-950">{menteeName}</dd>
               </div>
               <div>
                 <dt className="text-sm text-zinc-500">시작일</dt>
@@ -103,6 +100,7 @@ export default async function MentorshipDetailPage({ params }: MentorshipDetailP
                         {session.menteeNote ? <p>멘티 기록: {session.menteeNote}</p> : null}
                       </div>
                     ) : null}
+                    {session.status === "scheduled" ? <CompleteSessionForm mentorshipId={mentorship.id} sessionId={session.id} /> : null}
                   </article>
                 ))}
               </div>
@@ -141,7 +139,7 @@ export default async function MentorshipDetailPage({ params }: MentorshipDetailP
           ) : null}
 
           {mentorship.status === "active" || mentorship.status === "planned" ? <SessionForm mentorshipId={mentorship.id} /> : null}
-          {completedSession ? <FeedbackForm sessionId={completedSession.id} targetUserId={targetUserId} /> : null}
+          {completedSession && !alreadySubmittedFeedback ? <FeedbackForm sessionId={completedSession.id} targetUserId={targetUserId} /> : null}
         </div>
 
         <aside className="space-y-4">

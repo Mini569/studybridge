@@ -6,8 +6,8 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { inputStyles } from "@/components/forms/FormField";
 import { AppShell } from "@/components/layout/AppShell";
 import { RequestCard } from "@/components/requests/RequestCard";
-import { BASE_SUBJECTS, DAY_OPTIONS, GRADE_OPTIONS, REQUEST_STATUS_LABELS } from "@/lib/constants/options";
-import { demoRequests } from "@/lib/demo/data";
+import { DAY_OPTIONS, GRADE_OPTIONS, REQUEST_STATUS_LABELS } from "@/lib/constants/options";
+import { loadRequests, loadSubjects } from "@/lib/data/studybridge";
 import type { RequestStatus } from "@/types/domain";
 
 export const metadata = {
@@ -23,10 +23,11 @@ type RequestSearchParams = {
 
 export default async function RequestsPage({ searchParams }: { searchParams: Promise<RequestSearchParams> }) {
   const params = await searchParams;
+  const [requests, subjects] = await Promise.all([loadRequests(), loadSubjects()]);
   const selectedGrade = params.grade ? Number(params.grade) : undefined;
   const selectedDay = params.day ? Number(params.day) : undefined;
 
-  const filteredRequests = demoRequests.filter((request) => {
+  const filteredRequests = requests.filter((request) => {
     const matchesSubject = params.subject ? request.subjectId === params.subject : true;
     const matchesGrade = selectedGrade ? request.requester?.grade === selectedGrade : true;
     const matchesStatus = params.status ? request.status === params.status : true;
@@ -48,7 +49,7 @@ export default async function RequestsPage({ searchParams }: { searchParams: Pro
           과목
           <select className={`${inputStyles} mt-2`} defaultValue={params.subject ?? ""} name="subject">
             <option value="">전체</option>
-            {BASE_SUBJECTS.map((subject) => (
+            {subjects.map((subject) => (
               <option key={subject.id} value={subject.id}>
                 {subject.name}
               </option>
@@ -98,7 +99,7 @@ export default async function RequestsPage({ searchParams }: { searchParams: Pro
       {filteredRequests.length > 0 ? (
         <section className="mt-6 grid gap-4 lg:grid-cols-2">
           {filteredRequests.map((request) => (
-            <RequestCard key={request.id} request={request} />
+            <RequestCard key={request.id} request={request} subjects={subjects} />
           ))}
         </section>
       ) : (

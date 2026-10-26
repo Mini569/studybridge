@@ -5,8 +5,8 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { inputStyles } from "@/components/forms/FormField";
 import { AppShell } from "@/components/layout/AppShell";
 import { MentorCard } from "@/components/mentors/MentorCard";
-import { BASE_SUBJECTS, DAY_OPTIONS, GRADE_OPTIONS } from "@/lib/constants/options";
-import { demoMentors } from "@/lib/demo/data";
+import { DAY_OPTIONS, GRADE_OPTIONS } from "@/lib/constants/options";
+import { loadMentors, loadSubjects } from "@/lib/data/studybridge";
 import { filterMentors } from "@/lib/mentors/filter-mentors";
 
 export const metadata = {
@@ -24,10 +24,11 @@ type MentorSearchParams = {
 
 export default async function MentorsPage({ searchParams }: { searchParams: Promise<MentorSearchParams> }) {
   const params = await searchParams;
+  const [mentors, subjects] = await Promise.all([loadMentors(), loadSubjects()]);
   const selectedDay = params.day ? Number(params.day) : undefined;
   const selectedGrade = params.grade ? Number(params.grade) : undefined;
   const onlyAvailable = params.available === "true";
-  const filteredMentors = filterMentors(demoMentors, {
+  const filteredMentors = filterMentors(mentors, {
     subject: params.subject,
     keyword: params.q,
     grade: selectedGrade,
@@ -45,7 +46,7 @@ export default async function MentorsPage({ searchParams }: { searchParams: Prom
           과목
           <select className={`${inputStyles} mt-2`} defaultValue={params.subject ?? ""} name="subject">
             <option value="">전체</option>
-            {BASE_SUBJECTS.map((subject) => (
+            {subjects.map((subject) => (
               <option key={subject.id} value={subject.id}>
                 {subject.name}
               </option>
@@ -99,9 +100,9 @@ export default async function MentorsPage({ searchParams }: { searchParams: Prom
       </form>
 
       {filteredMentors.length > 0 ? (
-        <section className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <section className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {filteredMentors.map((mentor) => (
-            <MentorCard key={mentor.profile.id} mentor={mentor} />
+            <MentorCard key={mentor.profile.id} mentor={mentor} subjects={subjects} />
           ))}
         </section>
       ) : (
