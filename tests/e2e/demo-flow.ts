@@ -45,12 +45,13 @@ function startServer() {
         stdio: "pipe",
       })
     : spawn("npm", ["run", "dev"], {
-    cwd: process.cwd(),
-    env: {
-      ...process.env,
-      NEXT_PUBLIC_DEMO_MODE: "true",
-    },
-    stdio: "pipe",
+        cwd: process.cwd(),
+        detached: true,
+        env: {
+          ...process.env,
+          NEXT_PUBLIC_DEMO_MODE: "true",
+        },
+        stdio: "pipe",
       });
 
   child.stdout.on("data", (chunk: Buffer) => process.stdout.write(`[dev] ${chunk.toString()}`));
@@ -60,7 +61,7 @@ function startServer() {
 }
 
 async function stopServer(server: ChildProcessWithoutNullStreams | null) {
-  if (!server || server.killed) {
+  if (!server || server.exitCode !== null) {
     return;
   }
 
@@ -75,11 +76,22 @@ async function stopServer(server: ChildProcessWithoutNullStreams | null) {
     return;
   }
 
-  server.kill("SIGTERM");
+  if (server.pid) {
+    try {
+      process.kill(-server.pid, "SIGTERM");
+    } catch {
+      server.kill("SIGTERM");
+    }
+  }
+
   await delay(1_000);
 
-  if (!server.killed) {
-    server.kill("SIGKILL");
+  if (server.pid) {
+    try {
+      process.kill(-server.pid, "SIGKILL");
+    } catch {
+      // The process group already exited normally.
+    }
   }
 }
 
