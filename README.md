@@ -189,10 +189,10 @@ npm run vercel:deploy
 ## GitHub Actions
 
 - `.github/workflows/ci.yml`: PR과 `main`/`master` push에서 lint, typecheck, test, build, E2E를 실행합니다.
-- `.github/workflows/vercel.yml`: Vercel preview/production 배포를 실행합니다.
+- Vercel Git Integration: `master` 푸시를 production으로, 다른 브랜치와 PR을 preview로 자동 배포합니다.
 - `.github/workflows/supabase.yml`: Supabase 마이그레이션을 운영 프로젝트에 적용합니다.
 
-GitHub Secrets에는 `VERCEL_TOKEN`, `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`, `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF`, `SUPABASE_DB_PASSWORD`를 등록합니다.
+GitHub Secrets에는 Supabase 배포용 `SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF`, `SUPABASE_DB_PASSWORD`를 등록합니다. Vercel은 연결된 GitHub 저장소의 Git Integration을 사용하므로 별도 Vercel 토큰이 필요하지 않습니다.
 
 ## 관리자 계정 설정
 

@@ -21,15 +21,12 @@ git push -u origin main
 GitHub 저장소의 `Settings > Secrets and variables > Actions`에 아래 값을 추가합니다.
 
 ```text
-VERCEL_TOKEN
-VERCEL_ORG_ID
-VERCEL_PROJECT_ID
 SUPABASE_ACCESS_TOKEN
 SUPABASE_PROJECT_REF
 SUPABASE_DB_PASSWORD
 ```
 
-이 값들이 있어야 `.github/workflows/vercel.yml`과 `.github/workflows/supabase.yml`이 원격에서 정상 실행됩니다.
+이 값들이 있어야 `.github/workflows/supabase.yml`이 원격에서 정상 실행됩니다. Vercel 배포는 GitHub 저장소와 연결된 Vercel Git Integration이 담당합니다.
 
 ## 3. Supabase 설정
 
@@ -94,12 +91,12 @@ npm run vercel:build
 npm run vercel:deploy
 ```
 
-GitHub Actions 배포는 `.github/workflows/vercel.yml`이 담당합니다. PR은 preview 배포, `main` 또는 `master` push는 production 배포로 실행됩니다.
+Vercel Git Integration이 배포를 담당합니다. Vercel Production 환경의 Branch Tracking은 실제 기본 브랜치인 `master`로 설정되어 있으며, `master` 푸시는 production 배포, 다른 브랜치와 PR은 preview 배포로 실행됩니다. 로컬 CLI 운영 배포는 `npm run vercel:deploy`로 실행할 수 있습니다.
 
 ## 5. 자동화된 검증과 배포
 
 - `.github/workflows/ci.yml`: PR과 `main`/`master` push에서 lint, typecheck, test, build, E2E를 실행합니다.
-- `.github/workflows/vercel.yml`: Vercel preview/production 배포를 실행합니다.
+- Vercel Git Integration: `master` 푸시를 production으로, 다른 브랜치와 PR을 preview로 자동 배포합니다.
 - `.github/workflows/supabase.yml`: `supabase/**` 변경 시 또는 수동 실행으로 DB 마이그레이션을 적용합니다.
 
 ## 6. 배포 전 체크리스트
