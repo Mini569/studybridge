@@ -17,7 +17,13 @@ import type { Subject } from "@/types/domain";
 type OnboardingFormValues = z.input<typeof onboardingSchema>;
 type OnboardingInput = z.output<typeof onboardingSchema>;
 
-export function OnboardingForm({ subjects }: { subjects: Subject[] }) {
+interface OnboardingFormProps {
+  initialDisplayName: string;
+  initialGrade: number;
+  subjects: Subject[];
+}
+
+export function OnboardingForm({ initialDisplayName, initialGrade, subjects }: OnboardingFormProps) {
   const router = useRouter();
   const [serverMessage, setServerMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -29,8 +35,8 @@ export function OnboardingForm({ subjects }: { subjects: Subject[] }) {
   } = useForm<OnboardingFormValues, unknown, OnboardingInput>({
     resolver: zodResolver(onboardingSchema),
     defaultValues: {
-      displayName: "김민서",
-      grade: 2,
+      displayName: initialDisplayName,
+      grade: initialGrade,
       bio: "",
       interests: ["수학"],
       needs: ["수학"],

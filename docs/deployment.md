@@ -46,7 +46,13 @@ NEXT_PUBLIC_SITE_URL=
 NEXT_PUBLIC_DEMO_MODE=false
 ```
 
-4. Auth redirect URL에 이메일 가입 확인용 복귀 주소를 등록합니다. `NEXT_PUBLIC_SITE_URL`은 해당 환경의 실제 사이트 주소로 설정합니다.
+4. `Authentication > Providers > Google`을 활성화하고 Google OAuth Client ID와 Secret을 등록합니다. Google Cloud Console의 승인된 리디렉션 URI에는 다음 Supabase Auth 콜백 주소를 등록합니다.
+
+```text
+https://upcfyemazoluuytbjlud.supabase.co/auth/v1/callback
+```
+
+5. `Authentication > URL Configuration`에 Google 로그인 완료 후 돌아올 앱 주소를 등록합니다. `NEXT_PUBLIC_SITE_URL`은 해당 환경의 실제 사이트 주소로 설정합니다.
 
 ```text
 http://localhost:3000
@@ -56,7 +62,7 @@ https://studybridge-ashy.vercel.app/auth/callback
 필요한 Vercel Preview 주소
 ```
 
-5. Supabase CLI로 프로젝트를 연결하고 마이그레이션을 적용합니다.
+6. Supabase CLI로 프로젝트를 연결하고 마이그레이션을 적용합니다.
 
 ```bash
 npm run supabase:link -- --project-ref <SUPABASE_PROJECT_REF>
@@ -105,9 +111,10 @@ GitHub Actions 배포는 `.github/workflows/vercel.yml`이 담당합니다. PR�
 - `npm run test:e2e`
 - Supabase 마이그레이션 적용 완료
 - `public.subjects`에 기본 과목 10개 입력 완료
-- 실제 모드에서 가입 → 온보딩 → 요청 작성 → 추천·신청 → 세션·피드백 흐름 확인
+- 실제 모드에서 Google 가입 → 온보딩 → 요청 작성 → 추천·신청 → 세션·피드백 흐름 확인
 - Vercel 환경변수 입력 완료
 - GitHub Secrets 입력 완료
 - 운영 `NEXT_PUBLIC_SITE_URL`이 실제 Vercel 도메인과 일치
-- Supabase 프로젝트가 활성 상태이고 이메일 가입이 허용되어 있음
-- 이메일 확인을 사용하는 경우 `/auth/callback`이 Redirect URLs에 등록되어 있음
+- Supabase 프로젝트가 활성 상태이고 Google 공급자가 활성화되어 있음
+- Google Cloud에 Supabase Auth 콜백 주소가 등록되어 있음
+- Supabase Redirect URLs에 운영 사이트의 `/auth/callback`이 등록되어 있음

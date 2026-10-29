@@ -5,25 +5,6 @@ import { HELP_TYPE_OPTIONS } from "@/lib/constants/options";
 
 const gradeSchema = z.coerce.number().int().min(1, "학년을 선택해 주세요.").max(3, "학년을 선택해 주세요.");
 
-export const loginSchema = z.object({
-  email: z.email("이메일 형식이 올바르지 않습니다."),
-  password: z.string().min(1, "비밀번호를 입력해 주세요."),
-});
-
-export const signupSchema = z
-  .object({
-    displayName: z.string().trim().min(2, "닉네임은 2자 이상이어야 합니다.").max(30, "닉네임은 30자 이하입니다."),
-    email: z.email("이메일 형식이 올바르지 않습니다."),
-    password: z.string().min(8, "비밀번호는 최소 8자입니다."),
-    confirmPassword: z.string().min(8, "비밀번호 확인을 입력해 주세요."),
-    grade: gradeSchema,
-    termsAccepted: z.coerce.boolean().refine(Boolean, "이용약관에 동의해야 가입할 수 있습니다."),
-  })
-  .refine((value) => value.password === value.confirmPassword, {
-    path: ["confirmPassword"],
-    message: "비밀번호가 일치하지 않습니다.",
-  });
-
 const mentorAvailabilityFields = {
   mentorSubjectIds: z.array(z.string()).default([]),
   mentorTopics: z.string().max(300, "세부 단원은 300자 이하로 입력해 주세요.").optional(),
@@ -146,8 +127,5 @@ export const feedbackSchema = z
     message: "후속 조치가 필요하면 개선 메모를 10자 이상 남겨 주세요.",
   });
 
-export type LoginInput = z.infer<typeof loginSchema>;
-export type SignupInput = z.output<typeof signupSchema>;
-export type SignupFormValues = z.input<typeof signupSchema>;
 export type LearningRequestInput = z.output<typeof learningRequestSchema>;
 export type LearningRequestFormValues = z.input<typeof learningRequestSchema>;

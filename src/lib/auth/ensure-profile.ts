@@ -19,12 +19,15 @@ export async function ensureProfileForUser(supabase: ServerSupabaseClient, user:
     return true;
   }
 
-  const displayName = typeof user.user_metadata.display_name === "string" ? user.user_metadata.display_name.trim() : "";
-  const grade = Number(user.user_metadata.grade);
-
-  if (displayName.length < 2 || displayName.length > 30 || ![1, 2, 3].includes(grade)) {
-    return false;
-  }
+  const metadata = user.user_metadata;
+  const nameCandidates = [metadata.display_name, metadata.full_name, metadata.name];
+  const metadataName = nameCandidates.find((value): value is string => typeof value === "string" && value.trim().length > 0)?.trim();
+  const emailName = user.email?.split("@", 1)[0]?.trim();
+  const fallbackName = `학생-${user.id.slice(0, 6)}`;
+  const rawDisplayName = metadataName ?? emailName ?? fallbackName;
+  const displayName = (rawDisplayName.length >= 2 ? rawDisplayName : `${rawDisplayName} 학생`).slice(0, 30);
+  const metadataGrade = Number(metadata.grade);
+  const grade = [1, 2, 3].includes(metadataGrade) ? metadataGrade : 1;
 
   const { error: insertError } = await supabase.from("profiles").insert({
     id: user.id,

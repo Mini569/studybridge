@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { formatStatusLabel } from "@/lib/utils";
-import { feedbackSchema, learningRequestSchema, signupSchema } from "@/lib/validation/schemas";
+import { feedbackSchema, learningRequestSchema, onboardingSchema } from "@/lib/validation/schemas";
 
 describe("status labels", () => {
   it("translates known status values into Korean labels", () => {
@@ -13,14 +13,17 @@ describe("status labels", () => {
 });
 
 describe("form validation", () => {
-  it("rejects mismatched signup passwords", () => {
-    const result = signupSchema.safeParse({
+  it("requires at least one interest during Google account onboarding", () => {
+    const result = onboardingSchema.safeParse({
       displayName: "김민서",
-      email: "minseo@example.com",
-      password: "password123",
-      confirmPassword: "password456",
       grade: 2,
-      termsAccepted: true,
+      bio: "수학을 함께 공부하고 싶습니다.",
+      interests: [],
+      needs: ["수학"],
+      wantsToMentor: false,
+      mentorSubjectIds: [],
+      availableDays: [],
+      maxActiveMentees: 3,
     });
 
     expect(result.success).toBe(false);

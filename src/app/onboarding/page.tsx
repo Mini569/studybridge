@@ -1,14 +1,14 @@
 import { OnboardingForm } from "@/components/forms/OnboardingForm";
 import { DemoBanner } from "@/components/layout/DemoBanner";
 import { isDemoMode } from "@/lib/env";
-import { loadSubjects } from "@/lib/data/studybridge";
+import { loadCurrentProfile, loadSubjects } from "@/lib/data/studybridge";
 
 export const metadata = {
   title: "온보딩",
 };
 
 export default async function OnboardingPage() {
-  const subjects = await loadSubjects();
+  const [profile, subjects] = await Promise.all([loadCurrentProfile(), loadSubjects()]);
   return (
     <main className="min-h-screen bg-zinc-50">
       {isDemoMode ? <DemoBanner /> : null}
@@ -20,7 +20,7 @@ export default async function OnboardingPage() {
             관심 과목과 도움받고 싶은 과목을 등록하면 멘토 추천과 대시보드가 더 정확해집니다.
           </p>
           <div className="mt-6">
-            <OnboardingForm subjects={subjects} />
+            <OnboardingForm initialDisplayName={profile.displayName} initialGrade={profile.grade} subjects={subjects} />
           </div>
         </section>
       </div>

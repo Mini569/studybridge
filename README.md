@@ -6,7 +6,7 @@ StudyBridge는 교내 학생이 학습 도움 요청을 등록하고, 과목과 
 
 ## 핵심 기능
 
-- 이메일/비밀번호 기반 회원가입, 로그인, 온보딩 구조
+- Google OAuth 기반 회원가입, 로그인, 온보딩 구조
 - 멘토 활동 설정, 과목/세부 단원/가능 시간 등록 구조
 - 멘토 목록 검색, URL 쿼리 기반 필터와 정렬
 - 실제 Supabase 과목 UUID를 사용하는 학습 도움 요청 작성, 목록, 상세, 추천 멘토 표시
@@ -90,7 +90,8 @@ NEXT_PUBLIC_DEMO_MODE=false
 2. Project Settings에서 URL과 anon key를 `.env.local`에 입력합니다.
 3. service role key는 로컬 seed나 관리자 서버 작업에만 사용합니다.
 4. SQL Editor 또는 Supabase CLI로 마이그레이션을 적용합니다.
-5. Auth redirect URL에 `http://localhost:3000/auth/callback`, `https://studybridge-ashy.vercel.app/auth/callback`, 필요한 Vercel Preview의 `/auth/callback` 주소를 등록합니다. 이메일 확인이 켜져 있으면 확인 링크를 누른 뒤 이 경로에서 세션과 학습 프로필이 준비됩니다.
+5. `Authentication > Providers > Google`을 활성화하고 Google OAuth Client ID와 Secret을 등록합니다. Google Cloud의 승인된 리디렉션 URI에는 Supabase 콜백 주소 `https://<project-ref>.supabase.co/auth/v1/callback`을 입력합니다.
+6. Supabase `Authentication > URL Configuration`의 Redirect URLs에는 `http://localhost:3000/auth/callback`, `https://studybridge-ashy.vercel.app/auth/callback`, 필요한 Vercel Preview의 `/auth/callback` 주소를 등록합니다. Google 인증 뒤 이 경로에서 세션과 학습 프로필이 준비됩니다.
 
 ## SQL 마이그레이션 실행 순서
 
@@ -208,11 +209,11 @@ where id = '관리자 auth.users.id';
 ## 주요 사용자 흐름
 
 ```text
-회원가입 -> 온보딩 -> 멘토 찾기 -> 멘토링 신청 -> 승인 -> 세션 기록 -> 완료 -> 피드백
+Google 회원가입 -> 온보딩 -> 멘토 찾기 -> 멘토링 신청 -> 승인 -> 세션 기록 -> 완료 -> 피드백
 ```
 
 ```text
-회원가입 -> 도움 요청 작성 -> 추천 멘토 확인 -> 신청 -> 승인 -> 멘토링 시작
+Google 회원가입 -> 도움 요청 작성 -> 추천 멘토 확인 -> 신청 -> 승인 -> 멘토링 시작
 ```
 
 ```text
@@ -221,7 +222,7 @@ where id = '관리자 auth.users.id';
 
 ## 알려진 제한 사항
 
-- MVP에는 실시간 채팅, 영상 통화, 결제, 외부 AI API, SNS 로그인, 정확한 위치 추적이 없습니다.
+- MVP에는 실시간 채팅, 영상 통화, 결제, 외부 AI API, 정확한 위치 추적이 없습니다.
 - 데모 모드는 화면 확인용이며 데이터 변경을 유지하지 않습니다.
 - 실제 운영에서는 학교 인증, 관리자 온보딩, 신고 운영 정책을 추가로 정해야 합니다.
 
