@@ -4,6 +4,7 @@
 .env.local
 coverage
 node_modules
+output
 test-results
 tests
 tmp
