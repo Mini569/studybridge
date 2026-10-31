@@ -49,15 +49,16 @@ NEXT_PUBLIC_DEMO_MODE=false
 https://upcfyemazoluuytbjlud.supabase.co/auth/v1/callback
 ```
 
-5. `Authentication > URL Configuration`에 Google 로그인 완료 후 돌아올 앱 주소를 등록합니다. `NEXT_PUBLIC_SITE_URL`은 해당 환경의 실제 사이트 주소로 설정합니다.
+5. **호스팅된 프로젝트**의 `Authentication > URL Configuration`에서 아래 두 항목을 각각 저장합니다. Vercel 환경변수나 로컬 `supabase/config.toml`만 수정해서는 운영 Supabase 설정이 바뀌지 않습니다.
 
 ```text
-http://localhost:3000
-http://localhost:3000/auth/callback
-https://studybridge-ashy.vercel.app
-https://studybridge-ashy.vercel.app/auth/callback
-필요한 Vercel Preview 주소
+Site URL: https://studybridge-ashy.vercel.app
+Redirect URLs: https://studybridge-ashy.vercel.app/auth/callback
 ```
+
+운영 프로젝트는 다른 앱과 함께 사용되고 있으므로 기존 Redirect URLs를 삭제하지 않습니다. 로컬이나 미리보기 인증이 필요하면 해당 환경의 정확한 `/auth/callback` 주소를 별도로 추가합니다. 전체 Vercel 도메인을 허용하는 광범위한 패턴은 사용하지 않습니다. `NEXT_PUBLIC_SITE_URL`도 해당 환경의 실제 사이트 주소로 설정합니다. 로컬 개발용 `config.toml`을 운영 프로젝트에 그대로 `config push`하면 운영 기본 주소가 localhost로 바뀔 수 있으므로 사용하지 않습니다.
+
+검증할 때는 새 로그인 버튼에서 시작하여 Google 계정 선택 → 운영 사이트 `/auth/callback` → 온보딩 또는 대시보드까지 확인합니다. Google 화면이 열리거나 테스트가 통과하는 것만으로 실제 인증 완료가 검증되지는 않습니다. 이전 실패 화면의 인증 코드를 재사용하지 않습니다.
 
 6. Supabase CLI로 프로젝트를 연결하고 마이그레이션을 적용합니다.
 
