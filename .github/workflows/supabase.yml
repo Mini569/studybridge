@@ -7,7 +7,7 @@ on:
       - main
       - master
     paths:
-      - "supabase/**"
+      - "supabase/migrations/**"
 
 jobs:
   migrate:

@@ -98,7 +98,7 @@ Vercel Git Integration이 배포를 담당합니다. Vercel Production 환경의
 
 - `.github/workflows/ci.yml`: PR과 `main`/`master` push에서 lint, typecheck, test, build, E2E를 실행합니다.
 - Vercel Git Integration: `master` 푸시를 production으로, 다른 브랜치와 PR을 preview로 자동 배포합니다.
-- `.github/workflows/supabase.yml`: `supabase/**` 변경 시 또는 수동 실행으로 DB 마이그레이션을 적용합니다.
+- `.github/workflows/supabase.yml`: `supabase/migrations/**` 변경 시 또는 수동 실행으로 DB 마이그레이션을 적용합니다. Auth URL 설정 변경은 DB 마이그레이션이 아니므로 이 작업을 실행하지 않습니다.
 
 ## 6. 배포 전 체크리스트
 
